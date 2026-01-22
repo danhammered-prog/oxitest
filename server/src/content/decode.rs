@@ -1,7 +1,8 @@
 use crate::api::error::{ApiError, ApiResult};
 use crate::config::Config;
 use crate::content::{FileContents, flash};
-use crate::model::enums::PostType;
+use crate::model::enums::{MimeType, PostType};
+use jxl as jxl_crate;
 use image::{DynamicImage, ImageFormat, ImageReader, ImageResult, Limits, Rgb, RgbImage};
 use std::fs::File;
 use std::io::{BufReader, Cursor};
@@ -23,11 +24,16 @@ pub fn representative_image(
 ) -> ApiResult<DynamicImage> {
     match PostType::from(file_contents.mime_type) {
         PostType::Image | PostType::Animation => {
-            let image_format = file_contents
-                .mime_type
-                .to_image_format()
-                .expect("Mime type should be convertable to image format");
-            image(&file_contents.data, image_format).map_err(ApiError::from)
+            match file_contents.mime_type {
+                MimeType::Jxl => decode_jxl(&file_contents.data).map_err(ApiError::from),
+                _ => {
+                    let image_format = file_contents
+                        .mime_type
+                        .to_image_format()
+                        .expect("Mime type should be convertable to image format");
+                    image(&file_contents.data, image_format).map_err(ApiError::from)
+                }
+            }
         }
         PostType::Video => video_frame(file_path).and_then(|frame| frame.ok_or(ApiError::EmptyVideo)),
         PostType::Flash => flash_image(config, file_path).and_then(|frame| frame.ok_or(ApiError::EmptySwf)),
@@ -159,6 +165,33 @@ fn image_reader_limits() -> Limits {
     let mut limits = Limits::no_limits();
     limits.max_alloc = Some(4 * GB);
     limits
+}
+
+/// Decode JPEG XL bytes into a `DynamicImage` using the `jxl` crate.
+fn decode_jxl(bytes: &[u8]) -> image::ImageResult<DynamicImage> {
+    // The `jxl` crate exposes decoding helpers that return raw pixel data.
+    // We attempt to decode to 8-bit RGBA and then construct a DynamicImage.
+    let decoded = jxl_crate::decode(bytes).map_err(|err| {
+        image::ImageError::Decoding(image::error::DecodingError::new(
+            image::error::ImageFormatHint::Unknown,
+            format!("JXL decode error: {err}"),
+        ))
+    })?;
+
+    // Expect the decoded image to provide width, height and RGBA8 pixels.
+    let width = decoded.width() as u32;
+    let height = decoded.height() as u32;
+
+    // The `jxl` crate typically exposes pixel data as RGBA8; attempt to obtain it.
+    let rgba: Vec<u8> = decoded.rgba8().to_vec();
+
+    let buffer = image::ImageBuffer::from_raw(width, height, rgba).ok_or_else(|| {
+        image::ImageError::Parameter(image::error::ParameterError::from_kind(
+            image::error::ParameterErrorKind::DimensionMismatch,
+        ))
+    })?;
+
+    Ok(DynamicImage::ImageRgba8(buffer))
 }
 
 /// Converts raw `video_frame` into a [`DynamicImage`].

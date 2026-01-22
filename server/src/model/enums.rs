@@ -125,6 +125,9 @@ pub enum MimeType {
     #[serde(rename = "image/avif")]
     #[strum(serialize = "image/avif")]
     Avif,
+    #[serde(rename = "image/jxl")]
+    #[strum(serialize = "image/jxl")]
+    Jxl,
 }
 
 impl MimeType {
@@ -133,6 +136,7 @@ impl MimeType {
     pub fn from_extension(extension: &str) -> Result<Self, ParseExtensionError> {
         match extension {
             "avif" | "AVIF" => Ok(Self::Avif),
+            "jxl" | "JXL" => Ok(Self::Jxl),
             "bmp" | "BMP" => Ok(Self::Bmp),
             "gif" | "GIF" => Ok(Self::Gif),
             "jpg" | "jpeg" | "JPG" | "JPEG" => Ok(Self::Jpeg),
@@ -159,6 +163,7 @@ impl MimeType {
     pub fn extension(self) -> &'static str {
         match self {
             Self::Avif => "avif",
+            Self::Jxl => "jxl",
             Self::Bmp => "bmp",
             Self::Gif => "gif",
             Self::Jpeg => "jpg",
@@ -176,6 +181,7 @@ impl MimeType {
     pub fn to_image_format(self) -> Option<ImageFormat> {
         match self {
             MimeType::Avif => Some(ImageFormat::Avif),
+            MimeType::Jxl => None,
             MimeType::Bmp => Some(ImageFormat::Bmp),
             MimeType::Gif => Some(ImageFormat::Gif),
             MimeType::Jpeg => Some(ImageFormat::Jpeg),

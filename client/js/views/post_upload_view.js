@@ -16,6 +16,7 @@ function _mimeTypeToPostType(mimeType) {
             "image/jpeg": "image",
             "image/png": "image",
             "image/webp": "image",
+            "image/jxl": "image",
             "image/bmp": "image",
             "image/avif": "image",
             "image/heif": "image",
@@ -110,7 +111,7 @@ class Url extends Uploadable {
     }
 
     get mimeType() {
-        let mime = {
+            let mime = {
             swf: "application/x-shockwave-flash",
             jpg: "image/jpeg",
             png: "image/png",
@@ -120,6 +121,7 @@ class Url extends Uploadable {
             avif: "image/avif",
             heif: "image/heif",
             heic: "image/heic",
+            jxl: "image/jxl",
             mp4: "video/mp4",
             mov: "video/quicktime",
             webm: "video/webm",
@@ -165,7 +167,7 @@ class PostUploadView extends events.EventTarget {
             this._contentInputNode,
             {
                 extraText:
-                    "Allowed extensions: .jpg, .png, .gif, .webm, .mp4, .swf, .avif, .heif, .heic",
+                    "Allowed extensions: .jpg, .png, .gif, .webm, .mp4, .swf, .avif, .heif, .heic, .jxl",
                 allowUrls: true,
                 allowMultiple: true,
                 lock: false,
