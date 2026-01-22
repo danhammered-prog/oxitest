@@ -17,7 +17,7 @@ FROM chef AS builder
 ENV DOCKER_DEPLOYMENT=1
 
 # Install system dependencies
-RUN apk update && apk add --no-cache pkgconfig clang-dev postgresql-dev dav1d-dev ffmpeg-dev
+RUN apk update && apk add --no-cache pkgconfig clang-dev postgresql-dev dav1d-dev ffmpeg-dev libjxl-dev
 
 COPY --from=planner /opt/app/recipe.json recipe.json
 
@@ -40,7 +40,7 @@ ARG PUID=1000
 ARG PGID=1000
 
 # Install dynamic libs needed at runtime
-RUN apk update && apk add --no-cache libpq ffmpeg-libavdevice
+RUN apk update && apk add --no-cache libpq ffmpeg-libavdevice libjxl
 
 # Set permissions
 RUN mkdir -p /opt/app /data \

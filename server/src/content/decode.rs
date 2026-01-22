@@ -202,3 +202,24 @@ fn rgb24_frame(video_frame: &[u8], width: u32, height: u32, stride: usize) -> Dy
     });
     DynamicImage::ImageRgb8(rgb_image)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+
+    #[test]
+    fn test_decode_jxl() {
+        // This test requires a sample .jxl file. For now, skip if not present.
+        let jxl_path = "test_data/sample.jxl";
+        if !fs::metadata(jxl_path).is_ok() {
+            println!("Skipping JXL test: no sample file at {}", jxl_path);
+            return;
+        }
+
+        let data = fs::read(jxl_path).expect("Failed to read sample JXL");
+        let image = decode_jxl(&data).expect("Failed to decode JXL");
+        assert!(image.width() > 0);
+        assert!(image.height() > 0);
+    }
+}
